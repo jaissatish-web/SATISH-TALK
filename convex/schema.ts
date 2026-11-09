@@ -32,7 +32,12 @@ export default defineSchema({
     toSession: v.string(),
     fromSession: v.string(),
     channel: v.string(),
-    kind: v.union(v.literal("offer"), v.literal("answer"), v.literal("ice")),
+    kind: v.union(
+      v.literal("offer"),
+      v.literal("answer"),
+      v.literal("ice"),
+      v.literal("restart"),
+    ),
     payload: v.string(),
     createdAt: v.number(),
   })

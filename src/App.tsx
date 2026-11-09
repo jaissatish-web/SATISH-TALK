@@ -3,7 +3,11 @@ import { useRadio } from "./hooks/useRadio";
 import { configured, convexClient } from "./lib/convexClient";
 import { getBackend } from "./lib/radio/convexBackend";
 import { api } from "../convex/_generated/api";
-import { loadKeepAwake, loadDisplayName, saveDisplayName } from "./lib/radio/session";
+import {
+  loadKeepAwake,
+  loadDisplayName,
+  saveDisplayName,
+} from "./lib/radio/session";
 import { PTTButton } from "./components/PTTButton";
 
 const CHANNEL = "instrumentation";
@@ -42,7 +46,10 @@ export default function App() {
   const { state } = radio;
   const [name, setName] = useState(loadDisplayName);
   const [token, setToken] = useState(readInvite);
-  useEffect(() => { if (location.hash) history.replaceState(null, "", location.pathname + location.search); }, []);
+  useEffect(() => {
+    if (location.hash)
+      history.replaceState(null, "", location.pathname + location.search);
+  }, []);
   const [code, setCode] = useState("");
   const [tab, setTab] = useState("Radio");
   const [channelName, setChannelName] = useState("Instrumentation Team");
@@ -54,6 +61,12 @@ export default function App() {
   const [owner, setOwner] = useState("");
   const [newName, setNewName] = useState("");
   const online = state.connection === "online";
+  const audioWarning = Object.values(state.peerStates).includes("failed")
+    ? "Some team audio links failed. Open Settings and tap Reconnect."
+    : "";
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [tab]);
   const connected = state.screen === "channel";
   const [preparing, setPreparing] = useState(false);
   const connectEpoch = useRef(0);
@@ -200,9 +213,9 @@ export default function App() {
                 : "No internet"}
           </span>
         </div>
-        {(notice || state.joinError) && (
+        {(notice || state.joinError || audioWarning) && (
           <p className="notice" role="status">
-            {notice || state.joinError}
+            {notice || state.joinError || audioWarning}
           </p>
         )}
         {tab === "Radio" && (
@@ -251,7 +264,10 @@ export default function App() {
               <Toggle
                 label="Walkie-Talkie Mode"
                 checked={connected}
-                disabled={!connected && (working || name.trim().length < 2 || !token || !code)}
+                disabled={
+                  !connected &&
+                  (working || name.trim().length < 2 || !token || !code)
+                }
                 onChange={mode}
               />
               <p>
@@ -274,6 +290,10 @@ export default function App() {
               </p>
               <PTTButton
                 disabled={!online}
+                disconnected={
+                  state.connection === "error" ||
+                  state.connection === "reconnecting"
+                }
                 talking={state.talking}
                 busy={
                   state.busy ||
@@ -328,7 +348,7 @@ export default function App() {
                           ? "Connected"
                           : state.peerStates[m.sessionId] === "connected"
                             ? "Audio connected"
-                            : "Audio linking"}
+                            : state.peerStates[m.sessionId] === "failed" ? "Audio disconnected" : "Audio linking"}
                     </small>
                   </div>
                   <i
@@ -349,7 +369,10 @@ export default function App() {
             <Toggle
               label="Walkie-Talkie Mode"
               checked={connected}
-              disabled={!connected && (working || name.trim().length < 2 || !token || !code)}
+              disabled={
+                !connected &&
+                (working || name.trim().length < 2 || !token || !code)
+              }
               onChange={mode}
             />
             <Toggle

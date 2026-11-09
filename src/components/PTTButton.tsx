@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 export function PTTButton({
   disabled,
+  disconnected = false,
   talking,
   busy,
   requesting,
@@ -8,6 +9,7 @@ export function PTTButton({
   onEnd,
 }: {
   disabled: boolean;
+  disconnected?: boolean;
   talking: boolean;
   busy: boolean;
   requesting: boolean;
@@ -31,7 +33,7 @@ export function PTTButton({
   return (
     <button
       type="button"
-      className={`ptt ${talking ? "transmitting" : ""} ${busy ? "busy" : ""}`}
+      className={`ptt ${talking ? "transmitting" : ""} ${busy ? "busy" : ""} ${disconnected ? "disconnected" : ""}`}
       disabled={disabled}
       aria-label="Hold to talk"
       aria-pressed={talking}
@@ -90,7 +92,9 @@ export function PTTButton({
         {talking
           ? "Release to stop"
           : disabled
-            ? "Turn mode on to connect"
+            ? disconnected
+              ? "Reconnect to your team"
+              : "Turn mode on to connect"
             : busy
               ? "Wait for your turn"
               : "Press and hold"}

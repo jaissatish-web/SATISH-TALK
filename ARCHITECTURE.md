@@ -37,3 +37,5 @@ Wake lock is best effort, requested only for an active visible session and relea
 ## Limits and future scaling
 
 Ten-user audio quality is not established by a member limit or a simulated backend test. Test on real phones/networks and measure upload, CPU and battery. An SFU is a possible later option if measurements justify its hosting cost and operational complexity. Do not introduce one as an unapproved service.
+
+Each peer pair elects the lower session ID as its sole offerer. The counterpart answers and can send an authenticated restart request. ICE restarts keep the same peer connection, are bounded, and show a failed audio link after exhaustion. This avoids simultaneous-offer rollback and candidate loss. An independent 30-second control-plane watchdog stops a session even when a network request never settles.

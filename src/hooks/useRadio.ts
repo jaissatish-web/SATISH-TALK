@@ -178,7 +178,11 @@ export function useRadio() {
     connectionDeadline.current = window.setTimeout(() => {
       if (generation !== epoch.current || !active.current) return;
       leave();
-      setState(s => ({ ...s, connection: "error", joinError: "Connection could not be restored. Tap Reconnect." }));
+      setState((s) => ({
+        ...s,
+        connection: "error",
+        joinError: "Connection could not be restored. Tap Reconnect.",
+      }));
     }, 30000);
   }, [leave]);
   const join = useCallback(
@@ -217,7 +221,11 @@ export function useRadio() {
         const result = await getBackend().join(session, name.trim(), channel);
         if (!result.ok)
           throw new Error(
-            "Access denied. Check your invitation and access code.",
+            result.reason === "channel-full"
+              ? "Channel full. A maximum of 10 members can connect."
+              : result.reason === "name-in-use"
+                ? "That display name is already active. Choose another name."
+                : "Access denied. Check your invitation and access code.",
           );
         if (generation !== epoch.current) {
           local.getTracks().forEach((t) => t.stop());
@@ -525,6 +533,14 @@ export function useRadio() {
     const visibility = () => {
       stop();
       mesh.current?.setSpeaker(null);
+      if (document.visibilityState !== "visible") {
+        void wake.current?.release().catch(() => {});
+        wake.current = null;
+        setState((s) => ({
+          ...s,
+          wakeLock: awake.current && active.current ? "waiting" : "off",
+        }));
+      }
       if (document.visibilityState === "visible" && active.current) {
         healthy.current = false;
         setState((s) => ({ ...s, connection: "reconnecting" }));

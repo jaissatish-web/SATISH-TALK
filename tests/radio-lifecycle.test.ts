@@ -53,12 +53,10 @@ beforeEach(() => {
   Object.defineProperty(navigator, "mediaDevices", {
     configurable: true,
     value: {
-      getUserMedia: vi
-        .fn()
-        .mockResolvedValue({
-          getAudioTracks: () => [track],
-          getTracks: () => [track],
-        }),
+      getUserMedia: vi.fn().mockResolvedValue({
+        getAudioTracks: () => [track],
+        getTracks: () => [track],
+      }),
     },
   });
   Object.defineProperty(navigator, "onLine", {
@@ -202,13 +200,11 @@ describe("push-to-talk fail closed lifecycle", () => {
   });
   it("requests and releases screen wake lock only when enabled in a joined session", async () => {
     const release = vi.fn().mockResolvedValue(undefined);
-    const request = vi
-      .fn()
-      .mockResolvedValue({
-        released: false,
-        release,
-        addEventListener: vi.fn(),
-      });
+    const request = vi.fn().mockResolvedValue({
+      released: false,
+      release,
+      addEventListener: vi.fn(),
+    });
     Object.defineProperty(navigator, "wakeLock", {
       configurable: true,
       value: { request },
@@ -219,6 +215,22 @@ describe("push-to-talk fail closed lifecycle", () => {
       hook.result.current.setKeepAwake(true);
     });
     expect(request).toHaveBeenCalledWith("screen");
+    expect(hook.result.current.state.wakeLock).toBe("active");
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      value: "hidden",
+    });
+    act(() => document.dispatchEvent(new Event("visibilitychange")));
+    expect(release).toHaveBeenCalled();
+    expect(hook.result.current.state.wakeLock).toBe("waiting");
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      value: "visible",
+    });
+    await act(async () =>
+      document.dispatchEvent(new Event("visibilitychange")),
+    );
+    expect(request).toHaveBeenCalledTimes(2);
     expect(hook.result.current.state.wakeLock).toBe("active");
     act(() => hook.result.current.setKeepAwake(false));
     expect(release).toHaveBeenCalled();
@@ -299,12 +311,18 @@ describe("push-to-talk fail closed lifecycle", () => {
     expect(hook.result.current.state.connection).toBe("offline");
   });
   it("bounds reconnection and releases resources when an offline heartbeat never settles", async () => {
-    const hook = await joined(); backend.heartbeat.mockReturnValue(new Promise(() => {}));
-    act(() => { backend.subscribeConnection.mock.calls[0][0](false); });
+    const hook = await joined();
+    backend.heartbeat.mockReturnValue(new Promise(() => {}));
+    act(() => {
+      backend.subscribeConnection.mock.calls[0][0](false);
+    });
     expect(hook.result.current.state.connection).toBe("reconnecting");
-    await act(async () => { await vi.advanceTimersByTimeAsync(30001); });
-    expect(track.stop).toHaveBeenCalled(); expect(mesh.destroy).toHaveBeenCalled();
-    expect(hook.result.current.state.connection).toBe("error"); expect(hook.result.current.state.joinError).toContain("Reconnect");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30001);
+    });
+    expect(track.stop).toHaveBeenCalled();
+    expect(mesh.destroy).toHaveBeenCalled();
+    expect(hook.result.current.state.connection).toBe("error");
+    expect(hook.result.current.state.joinError).toContain("Reconnect");
   });
-
 });

@@ -13,7 +13,7 @@ export interface FloorState {
   expiresAt?: number;
 }
 
-export type SignalKind = "offer" | "answer" | "ice";
+export type SignalKind = "offer" | "answer" | "ice" | "restart";
 
 export interface Signal {
   id: string;

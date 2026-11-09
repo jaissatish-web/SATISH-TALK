@@ -550,3 +550,19 @@ details p {
     transition: none !important;
   }
 }
+
+.ptt.disconnected:disabled {
+  background: #482839;
+  border-color: #362236;
+  box-shadow: 0 0 0 1px #89536b;
+  color: #ffd2d5;
+}
+
+.members li > div {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.speaker {
+  overflow-wrap: anywhere;
+}

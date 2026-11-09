@@ -7,8 +7,15 @@ export default defineConfig({
     headless: true,
     permissions: ["microphone"],
     launchOptions: {
-      ...(process.env.CHROMIUM_EXECUTABLE ? {executablePath: process.env.CHROMIUM_EXECUTABLE} : {}),
-      args: ["--no-sandbox", "--disable-dev-shm-usage", "--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"],
+      ...(process.env.CHROMIUM_EXECUTABLE
+        ? { executablePath: process.env.CHROMIUM_EXECUTABLE }
+        : {}),
+      args: [
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--use-fake-device-for-media-stream",
+        "--use-fake-ui-for-media-stream",
+      ],
     },
   },
   webServer: {

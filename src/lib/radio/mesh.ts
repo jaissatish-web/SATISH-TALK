@@ -17,9 +17,9 @@ const RECONNECT_GRACE_MS = 8_000;
 
 interface PeerEntry {
   pc: RTCPeerConnection;
-  polite: boolean;
+  offerer: boolean;
+  exhausted: boolean;
   makingOffer: boolean;
-  ignoreOffer: boolean;
   hasRemoteDescription: boolean;
   pendingCandidates: RTCIceCandidateInit[];
   audioEl: HTMLAudioElement;
@@ -40,8 +40,8 @@ interface MeshOptions {
  * negotiates at join time with the mic track attached but disabled, so PTT is
  * just a track toggle — no renegotiation on press.
  *
- * Glare-safe via the "perfect negotiation" pattern (PLAN D3): politeness is
- * decided by sessionId comparison, identical-but-opposite at both ends.
+ * A deterministic offerer (lower session ID) prevents crossed initial offers
+ * and browser ICE candidate loss after glare rollback. The other side only answers.
  */
 export class RadioMesh {
   private peers = new Map<string, PeerEntry>();
@@ -94,7 +94,7 @@ export class RadioMesh {
     for (const [id, entry] of this.peers) {
       const st = entry.pc.connectionState;
       if (st === "failed" || st === "closed" || st === "disconnected") {
-        this.recreatePeer(id);
+        this.retryPeer(id);
       }
     }
     this.retryPendingAudio();
@@ -155,9 +155,9 @@ export class RadioMesh {
 
     const entry: PeerEntry = {
       pc,
-      polite: this.opts.sessionId < peerId,
+      offerer: this.opts.sessionId < peerId,
+      exhausted: false,
       makingOffer: false,
-      ignoreOffer: false,
       hasRemoteDescription: false,
       pendingCandidates: [],
       audioEl,
@@ -169,6 +169,8 @@ export class RadioMesh {
     pc.addTrack(this.opts.localTrack, this.opts.localStream);
 
     pc.onnegotiationneeded = async () => {
+      if (!entry.offerer || entry.makingOffer || pc.signalingState !== "stable")
+        return;
       try {
         entry.makingOffer = true;
         await pc.setLocalDescription();
@@ -199,7 +201,7 @@ export class RadioMesh {
     };
 
     pc.oniceconnectionstatechange = () => {
-      if (pc.iceConnectionState === "failed") pc.restartIce();
+      if (pc.iceConnectionState === "failed") this.scheduleRetry(peerId, entry);
     };
 
     pc.onconnectionstatechange = () => {
@@ -209,18 +211,7 @@ export class RadioMesh {
         pc.connectionState === "disconnected" ||
         pc.connectionState === "connecting"
       ) {
-        // restartIce may still save it; give it a grace period, then rebuild.
-        if (entry.failTimer === null) {
-          entry.failTimer = window.setTimeout(() => {
-            entry.failTimer = null;
-            if (
-              this.peers.get(peerId) === entry &&
-              entry.pc.connectionState !== "connected"
-            ) {
-              this.recreatePeer(peerId);
-            }
-          }, RECONNECT_GRACE_MS);
-        }
+        this.scheduleRetry(peerId, entry);
       } else if (
         pc.connectionState === "connected" &&
         entry.failTimer !== null
@@ -230,6 +221,7 @@ export class RadioMesh {
       }
     };
 
+    this.scheduleRetry(peerId, entry);
     this.emitStates();
     return entry;
   }
@@ -242,6 +234,11 @@ export class RadioMesh {
     const pc = entry.pc;
     if (pc.signalingState === "closed") return;
 
+    if (signal.kind === "restart") {
+      if (entry.offerer) pc.restartIce();
+      return;
+    }
+
     if (signal.kind === "ice") {
       const candidate = JSON.parse(signal.payload) as RTCIceCandidateInit;
       if (!entry.hasRemoteDescription) {
@@ -252,18 +249,15 @@ export class RadioMesh {
       try {
         await pc.addIceCandidate(candidate);
       } catch (err) {
-        if (!entry.ignoreOffer) console.warn("[mesh] addIceCandidate", err);
+        console.warn("[mesh] addIceCandidate", err);
       }
       return;
     }
 
     const description = JSON.parse(signal.payload) as RTCSessionDescriptionInit;
-    const offerCollision =
-      description.type === "offer" &&
-      (entry.makingOffer || pc.signalingState !== "stable");
-    entry.ignoreOffer = !entry.polite && offerCollision;
-    if (entry.ignoreOffer) return;
-
+    // Only the elected side may offer; only its counterpart may answer.
+    if (description.type === "offer" && entry.offerer) return;
+    if (description.type === "answer" && !entry.offerer) return;
     await pc.setRemoteDescription(description);
     entry.hasRemoteDescription = true;
     for (const c of entry.pendingCandidates.splice(0)) {
@@ -283,12 +277,33 @@ export class RadioMesh {
     }
   }
 
-  private recreatePeer(peerId: string): void {
+  private scheduleRetry(peerId: string, entry: PeerEntry): void {
+    if (entry.failTimer !== null || entry.exhausted) return;
+    entry.failTimer = window.setTimeout(() => {
+      entry.failTimer = null;
+      if (
+        this.peers.get(peerId) === entry &&
+        entry.pc.connectionState !== "connected"
+      )
+        this.retryPeer(peerId);
+    }, RECONNECT_GRACE_MS);
+  }
+
+  private retryPeer(peerId: string): void {
+    const entry = this.peers.get(peerId);
     const retries = this.retries.get(peerId) ?? 0;
-    if (retries >= 3) return;
+    if (!entry || this.destroyed) return;
+    if (retries >= 3) {
+      entry.exhausted = true;
+      this.emitStates();
+      return;
+    }
     this.retries.set(peerId, retries + 1);
-    this.destroyPeer(peerId);
-    if (this.knownMembers.has(peerId)) this.createPeer(peerId);
+    // Preserve SDP state. Recreating both sides independently can race old offers
+    // against new peer instances. ICE restart keeps a single elected offerer.
+    if (entry.offerer) entry.pc.restartIce();
+    else void this.opts.sendSignal(peerId, "restart", "{}").catch(() => {});
+    this.scheduleRetry(peerId, entry);
     this.emitStates();
   }
 
@@ -315,7 +330,10 @@ export class RadioMesh {
       out[id] =
         st === "connected"
           ? "connected"
-          : st === "failed" || st === "closed" || st === "disconnected"
+          : entry.exhausted ||
+              st === "failed" ||
+              st === "closed" ||
+              st === "disconnected"
             ? "failed"
             : "connecting";
     }

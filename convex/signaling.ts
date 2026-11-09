@@ -7,7 +7,12 @@ export const send = mutation({
     toSession: v.string(),
     sessionSecret: v.string(),
     channel: v.string(),
-    kind: v.union(v.literal("offer"), v.literal("answer"), v.literal("ice")),
+    kind: v.union(
+      v.literal("offer"),
+      v.literal("answer"),
+      v.literal("ice"),
+      v.literal("restart"),
+    ),
     payload: v.string(),
   },
   handler: async (ctx, a) => {
