@@ -4,8 +4,10 @@ const meshes:RadioMesh[]=[];
 const states:Record<string, string>[]=[];
 let sequence=0;
 let context:AudioContext;
+let permissionCapture:MediaStream;
 const tracks:MediaStreamTrack[]=[];
 async function start(count:number){
+ permissionCapture=await navigator.mediaDevices.getUserMedia({audio:true});
  context=new AudioContext();await context.resume();
  for(let i=0;i<count;i++){
   const oscillator=context.createOscillator();oscillator.frequency.value=440;
@@ -28,4 +30,7 @@ async function stats(){
  }
  return result;
 }
-Object.assign(window,{meshTest:{start,states,stats,talk(){meshes.forEach(m=>m.setSpeaker('member0'));tracks[0].enabled=true;},stop(){tracks[0].enabled=false;meshes.forEach(m=>m.setSpeaker(null));},cleanup(){meshes.forEach(m=>m.destroy());tracks.forEach(t=>t.stop());void context.close();}}});
+async function diagnostics(){
+ const rows=[];for(const mesh of meshes){const peers=(mesh as unknown as {peers:Map<string,{pc:RTCPeerConnection}>}).peers;const details=[];for(const [id,{pc}] of peers){const counts:Record<string,number>={};for(const item of (await pc.getStats()).values())counts[item.type]=(counts[item.type]||0)+1;details.push({id,connection:pc.connectionState,ice:pc.iceConnectionState,gathering:pc.iceGatheringState,signaling:pc.signalingState,stats:counts});}rows.push(details);}return rows;
+}
+Object.assign(window,{meshTest:{start,states,stats,diagnostics,talk(){meshes.forEach(m=>m.setSpeaker('member0'));tracks[0].enabled=true;},stop(){tracks[0].enabled=false;meshes.forEach(m=>m.setSpeaker(null));},cleanup(){meshes.forEach(m=>m.destroy());tracks.forEach(t=>t.stop());permissionCapture.getTracks().forEach(t=>t.stop());void context.close();}}});

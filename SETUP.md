@@ -4,7 +4,7 @@ No deployment has been performed. These instructions are for a separately author
 
 ## Local tools
 
-Use Node.js 22 and npm. Clone `https://github.com/jaissatish-web/SATISH-TALK`, open its directory and run:
+Use Node.js 22.12 or newer and npm. Clone `https://github.com/jaissatish-web/SATISH-TALK`, open its directory and run:
 
 ```sh
 npm ci
@@ -51,3 +51,7 @@ Enter the owner token only in owner controls when changing the channel display n
 To rotate access, replace `ROOM_TOKEN` and/or `ACCESS_CODE` in the Convex dashboard, then send updated credentials privately. Confirm an old invitation fails before relying on revocation. Read SECURITY.md for active-session behavior and emergency cleanup.
 
 For a future production deployment, use `npx convex deploy` only after checking the selected project and environment. Follow VERCEL_DEPLOYMENT.md afterward; do not run Vercel deployment commands during source preparation.
+
+## Repeatable browser checks
+
+Run `npx playwright install chromium`, then `npm run e2e`. The suite includes responsive UI and synthetic 2/5/10-peer WebRTC checks. It uses a test-only local signaling harness rather than a live Convex backend. A constrained sandbox without usable ICE network interfaces may fail the mesh checks; this does not establish either real-device success or a product defect. Run on a normal developer machine/CI and then complete TEST_REPORT.md on phones.

@@ -30,7 +30,7 @@ Official pricing checked 9 November 2026; prices are USD before taxes, usage and
 | Vercel  | Hobby is for personal/non-commercial use. Routine office/business communication should not be assumed eligible merely because the app is private or has no subscriptions. Pro starts at $20/month; included usage and overages apply.                            |
 | Convex  | Free has included resource caps; Starter is $0 base with pay-as-you-go beyond included resources. Professional is $25/developer/month. Choose based on current terms and actual usage; no paid plan is activated here.                                           |
 | STUN    | Usually low cost or public service, but availability is not guaranteed.                                                                                                                                                                                          |
-| TURN    | Bandwidth-dependent. Dedicated relay cost is additional. As one verified example, Metered lists a 500 MB trial, then $99/month for 150 GB with overages. This is an example, not a recommendation or a required purchase. Compare alternatives before selecting. |
+| TURN    | Bandwidth-dependent. Open Relay advertises 20 GB/month free; evaluate its current terms, credentials, limits and reliability before use. Dedicated commercial relay pricing varies; Metered premium lists a 500 MB trial and $99/month for 150 GB. Neither paid service is required or activated by this implementation. |
 | Domain  | Optional, separately billed if purchased. The Vercel subdomain does not require buying a domain.                                                                                                                                                                 |
 
 A small-team trial may fit Convex's included resources, but no fixed $0 total is promised. Presence, floor leases, reactive subscriptions and signaling all use backend resources. TURN may dominate costs if much traffic is relayed.
@@ -41,6 +41,7 @@ Official references:
 - https://vercel.com/legal/terms (Hobby plan)
 - https://www.convex.dev/pricing
 - https://docs.convex.dev/production/state/limits
+- https://www.metered.ca/tools/openrelay/
 - https://www.metered.ca/pricing
 
 ## Rollback

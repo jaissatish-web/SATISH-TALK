@@ -5,12 +5,11 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:5174",
     headless: true,
-    launchOptions: process.env.CHROMIUM_EXECUTABLE
-      ? {
-          executablePath: process.env.CHROMIUM_EXECUTABLE,
-          args: ["--no-sandbox", "--disable-dev-shm-usage"],
-        }
-      : {},
+    permissions: ["microphone"],
+    launchOptions: {
+      ...(process.env.CHROMIUM_EXECUTABLE ? {executablePath: process.env.CHROMIUM_EXECUTABLE} : {}),
+      args: ["--no-sandbox", "--disable-dev-shm-usage", "--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"],
+    },
   },
   webServer: {
     command: "npm run dev -- --host 127.0.0.1 --port 5174",

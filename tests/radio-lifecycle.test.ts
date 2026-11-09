@@ -298,4 +298,13 @@ describe("push-to-talk fail closed lifecycle", () => {
     expect(track.enabled).toBe(false);
     expect(hook.result.current.state.connection).toBe("offline");
   });
+  it("bounds reconnection and releases resources when an offline heartbeat never settles", async () => {
+    const hook = await joined(); backend.heartbeat.mockReturnValue(new Promise(() => {}));
+    act(() => { backend.subscribeConnection.mock.calls[0][0](false); });
+    expect(hook.result.current.state.connection).toBe("reconnecting");
+    await act(async () => { await vi.advanceTimersByTimeAsync(30001); });
+    expect(track.stop).toHaveBeenCalled(); expect(mesh.destroy).toHaveBeenCalled();
+    expect(hook.result.current.state.connection).toBe("error"); expect(hook.result.current.state.joinError).toContain("Reconnect");
+  });
+
 });

@@ -55,6 +55,7 @@ export function useRadio() {
   const pressVersion = useRef(0),
     pendingPress = useRef(false),
     pendingAttempt = useRef(0);
+  const connectionDeadline = useRef<number>();
   const releaseBarrier = useRef<Promise<void>>(Promise.resolve());
   const stream = useRef<MediaStream | null>(null),
     mesh = useRef<RadioMesh | null>(null);
@@ -143,6 +144,7 @@ export function useRadio() {
   );
   const leave = useCallback(() => {
     ++epoch.current;
+    clearTimeout(connectionDeadline.current);
     stop();
     pendingPress.current = false;
     pendingAttempt.current = 0;
@@ -168,6 +170,17 @@ export function useRadio() {
       micPermission: s.micPermission,
     }));
   }, [stop]);
+  // A queued Convex mutation may never reject during an outage.
+  // Release all resources unless a heartbeat confirms membership within 30s.
+  const confirmConnection = useCallback(() => {
+    clearTimeout(connectionDeadline.current);
+    const generation = epoch.current;
+    connectionDeadline.current = window.setTimeout(() => {
+      if (generation !== epoch.current || !active.current) return;
+      leave();
+      setState(s => ({ ...s, connection: "error", joinError: "Connection could not be restored. Tap Reconnect." }));
+    }, 30000);
+  }, [leave]);
   const join = useCallback(
     async (name: string, channel: string, accessCode = "") => {
       leave();
@@ -308,6 +321,7 @@ export function useRadio() {
             if (generation !== epoch.current) return;
             failures = 0;
             healthy.current = true;
+            confirmConnection();
             radioMesh.reconcile();
             void requestWake();
             const floor = stateRef.current.floor;
@@ -359,6 +373,7 @@ export function useRadio() {
           connection: "online",
           micPermission: "granted",
         }));
+        confirmConnection();
         void requestWake();
       } catch (error) {
         local?.getTracks().forEach((t) => t.stop());
@@ -379,7 +394,7 @@ export function useRadio() {
         }));
       }
     },
-    [leave, requestWake, stop],
+    [confirmConnection, leave, requestWake, stop],
   );
   const releasePTT = stop;
   const pressPTT = useCallback(async () => {
