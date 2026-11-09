@@ -31,22 +31,25 @@ class FakePeer {
 }
 function create(id: string, peer: string) {
   const sendSignal = vi.fn().mockResolvedValue(undefined),
-    states = vi.fn();
+    states = vi.fn(),
+    playback = vi.fn();
   const mesh = new RadioMesh({
     sessionId: id,
     localTrack: {} as MediaStreamTrack,
     localStream: {} as MediaStream,
     sendSignal,
     onPeerStates: states,
+    onPlaybackBlocked: playback,
   });
   mesh.syncPeers([id, peer]);
-  return { mesh, pc: instances.at(-1)!, sendSignal, states };
+  return { mesh, pc: instances.at(-1)!, sendSignal, states, playback };
 }
 beforeEach(() => {
   instances.length = 0;
   vi.stubGlobal("RTCPeerConnection", FakePeer);
 });
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.useRealTimers();
   vi.unstubAllGlobals();
   document.body.innerHTML = "";
@@ -112,6 +115,28 @@ describe("deterministic WebRTC negotiation", () => {
     expect(peer.states).toHaveBeenLastCalledWith({ b: "failed" });
     await vi.advanceTimersByTimeAsync(60000);
     expect(peer.pc.restartIce).toHaveBeenCalledTimes(3);
+    peer.mesh.destroy();
+  });
+  it("reports blocked autoplay and clears it after an explicit speaker gesture succeeds", async () => {
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockRejectedValueOnce(
+        new DOMException("Gesture required", "NotAllowedError"),
+      )
+      .mockResolvedValue(undefined);
+    const peer = create("a", "b");
+    const pc = peer.pc as unknown as {
+      ontrack: (event: { streams: object[] }) => void;
+    };
+    pc.ontrack({ streams: [{}] });
+    await vi.waitFor(() =>
+      expect(peer.playback).toHaveBeenLastCalledWith(true),
+    );
+    peer.mesh.retryPendingAudio();
+    await vi.waitFor(() =>
+      expect(peer.playback).toHaveBeenLastCalledWith(false),
+    );
+    expect(play).toHaveBeenCalledTimes(2);
     peer.mesh.destroy();
   });
 });

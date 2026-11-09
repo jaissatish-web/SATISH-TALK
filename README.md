@@ -12,6 +12,8 @@ A private internet walkie-talkie for a team of 2–10 people. Built for routine 
 4. Wait until the connection status is ready. Hold **Hold to talk**, speak, then release. Only one person can speak at a time.
 5. Turn the mode off to stop receiving, disconnect and release the microphone.
 
+If your browser pauses playback, tap **Enable speaker audio**. The microphone indicator may remain on while connected because the muted track is held ready; speech is sent only while your press has the channel floor.
+
 **Keep Screen Awake** is optional and uses more battery. Voice reception cannot be guaranteed when the phone locks or the browser is suspended. Return to the app and reconnect if needed.
 
 Install using Chrome's install/Add to Home screen menu, or Safari's Share → Add to Home Screen where supported. Installation does not remove browser background restrictions. Internet is required for live audio; cached app assets are not an offline radio.

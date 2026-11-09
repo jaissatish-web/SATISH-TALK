@@ -33,6 +33,7 @@ interface MeshOptions {
   localStream: MediaStream;
   sendSignal: (to: string, kind: SignalKind, payload: string) => Promise<void>;
   onPeerStates: (states: Record<string, PeerConnState>) => void;
+  onPlaybackBlocked?: (blocked: boolean) => void;
 }
 
 /**
@@ -105,15 +106,22 @@ export class RadioMesh {
     for (const el of [...this.pendingPlay]) {
       void el
         .play()
-        .then(() => this.pendingPlay.delete(el))
+        .then(() => {
+          this.pendingPlay.delete(el);
+          this.opts.onPlaybackBlocked?.(this.pendingPlay.size > 0);
+        })
         .catch(() => {});
     }
   }
 
   setSpeaker(sessionId: string | null): void {
     this.speaker = sessionId;
-    for (const [id, entry] of this.peers)
+    for (const [id, entry] of this.peers) {
       entry.audioEl.muted = id !== sessionId;
+      // Unmuting previously silent autoplay can itself require a user gesture.
+      if (id === sessionId && entry.audioEl.srcObject)
+        this.playAudio(id, entry.audioEl);
+    }
   }
 
   async setOutput(deviceId: string): Promise<void> {
@@ -197,7 +205,7 @@ export class RadioMesh {
     pc.ontrack = (e) => {
       const stream = e.streams[0] ?? new MediaStream([e.track]);
       audioEl.srcObject = stream;
-      void audioEl.play().catch(() => this.pendingPlay.add(audioEl));
+      this.playAudio(peerId, audioEl);
     };
 
     pc.oniceconnectionstatechange = () => {
@@ -277,6 +285,21 @@ export class RadioMesh {
     }
   }
 
+  private playAudio(peerId: string, audioEl: HTMLAudioElement): void {
+    void audioEl
+      .play()
+      .then(() => {
+        this.pendingPlay.delete(audioEl);
+        this.opts.onPlaybackBlocked?.(this.pendingPlay.size > 0);
+      })
+      .catch(() => {
+        if (this.destroyed || this.peers.get(peerId)?.audioEl !== audioEl)
+          return;
+        this.pendingPlay.add(audioEl);
+        this.opts.onPlaybackBlocked?.(true);
+      });
+  }
+
   private scheduleRetry(peerId: string, entry: PeerEntry): void {
     if (entry.failTimer !== null || entry.exhausted) return;
     entry.failTimer = window.setTimeout(() => {
@@ -321,6 +344,7 @@ export class RadioMesh {
     entry.audioEl.srcObject = null;
     entry.audioEl.remove();
     this.pendingPlay.delete(entry.audioEl);
+    this.opts.onPlaybackBlocked?.(this.pendingPlay.size > 0);
   }
 
   private emitStates(): void {

@@ -26,6 +26,7 @@ export interface RadioState {
   connection: "offline" | "connecting" | "online" | "reconnecting" | "error";
   wakeLock: "off" | "active" | "unavailable" | "waiting";
   micPermission: "unknown" | "granted" | "denied";
+  audioBlocked: boolean;
 }
 const initial: RadioState = {
   screen: "join",
@@ -43,6 +44,7 @@ const initial: RadioState = {
   connection: "offline",
   wakeLock: "off",
   micPermission: "unknown",
+  audioBlocked: false,
 };
 
 export function useRadio() {
@@ -250,6 +252,10 @@ export function useRadio() {
           localStream: local,
           sendSignal: (to, kind, payload) =>
             getBackend().sendSignal(session, to, channel, kind, payload),
+          onPlaybackBlocked: (audioBlocked) => {
+            if (generation === epoch.current)
+              setState((s) => ({ ...s, audioBlocked }));
+          },
           onPeerStates: (peerStates) => {
             if (generation === epoch.current)
               setState((s) => ({ ...s, peerStates }));
@@ -575,7 +581,11 @@ export function useRadio() {
       leave();
     };
   }, [leave, reconnect, requestWake, stop]);
+  const enableAudio = useCallback(() => {
+    mesh.current?.retryPendingAudio();
+  }, []);
   return {
+    enableAudio,
     state,
     join,
     leave,

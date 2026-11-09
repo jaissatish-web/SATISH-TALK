@@ -218,6 +218,12 @@ export default function App() {
             {notice || state.joinError || audioWarning}
           </p>
         )}
+        {state.audioBlocked && (
+          <div className="notice" role="status">
+            <p>Your browser paused speaker audio.</p>
+            <button onClick={radio.enableAudio}>Enable speaker audio</button>
+          </div>
+        )}
         {tab === "Radio" && (
           <>
             {!connected && (
@@ -348,7 +354,9 @@ export default function App() {
                           ? "Connected"
                           : state.peerStates[m.sessionId] === "connected"
                             ? "Audio connected"
-                            : state.peerStates[m.sessionId] === "failed" ? "Audio disconnected" : "Audio linking"}
+                            : state.peerStates[m.sessionId] === "failed"
+                              ? "Audio disconnected"
+                              : "Audio linking"}
                     </small>
                   </div>
                   <i

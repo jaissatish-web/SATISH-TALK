@@ -9,3 +9,6 @@
 - Prepare PWA, automated checks and separate deployment/acceptance documentation.
 
 See TEST_REPORT.md for actual verification. This entry does not mean production deployment or physical-device acceptance has occurred.
+
+- Fixed simultaneous-offer ICE loss found by five/ten-peer CI tests using an elected offerer and authorized bounded restart signals.
+- Added explicit browser autoplay recovery and stalled-connection watchdog.

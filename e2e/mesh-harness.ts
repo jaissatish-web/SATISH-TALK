@@ -96,9 +96,12 @@ Object.assign(window, {
     states,
     stats,
     diagnostics,
-    talk() {
-      meshes.forEach((m) => m.setSpeaker("member0"));
-      tracks[0].enabled = true;
+    talk(index = 0) {
+      tracks.forEach((t) => {
+        t.enabled = false;
+      });
+      meshes.forEach((m) => m.setSpeaker(`member${index}`));
+      tracks[index].enabled = true;
     },
     stop() {
       tracks[0].enabled = false;
