@@ -1,0 +1,88 @@
+export interface Member {
+  sessionId: string;
+  name: string;
+  joinedAt: number;
+  /** Stable device identity, when the client provided one (v2+). */
+  userId?: string;
+}
+
+export interface FloorState {
+  sessionId: string;
+  name: string;
+  since: number;
+  expiresAt?: number;
+}
+
+export type SignalKind = "offer" | "answer" | "ice";
+
+export interface Signal {
+  id: string;
+  fromSession: string;
+  channel: string;
+  kind: SignalKind;
+  payload: string;
+}
+
+export type PeerConnState = "connecting" | "connected" | "failed";
+
+export type JoinResult =
+  | { ok: true }
+  | {
+      ok: false;
+      reason: "code-required" | "code-invalid" | "channel-full" | "name-in-use";
+    };
+
+/**
+ * The full control-plane contract. `convexBackend.ts` is the only implementation
+ * today; a Supabase port implements this same interface against
+ * Supabase Realtime + Postgres (see INTEGRATION.md).
+ */
+export interface RadioBackend {
+  /** Shared access code sent with every subsequent call (no-op if gate is off). */
+  setAccessCode(code: string): void;
+  /** Whether the deployment currently requires an access code to join. */
+  codeRequired(): Promise<boolean>;
+
+  join(
+    sessionId: string,
+    name: string,
+    channel: string,
+    /** Stable device identity (chat/user layer); optional for compatibility. */
+    userId?: string,
+  ): Promise<JoinResult>;
+  leave(sessionId: string): Promise<void>;
+  heartbeat(sessionId: string): Promise<void>;
+  subscribeConnection(cb: (connected: boolean) => void): () => void;
+
+  acquireFloor(
+    sessionId: string,
+    name: string,
+    channel: string,
+  ): Promise<{ granted: boolean; holder?: string; expiresAt?: number }>;
+  renewFloor(
+    sessionId: string,
+    channel: string,
+  ): Promise<{ held: boolean; expiresAt?: number }>;
+  releaseFloor(sessionId: string, channel: string): Promise<void>;
+
+  sendSignal(
+    fromSession: string,
+    toSession: string,
+    channel: string,
+    kind: SignalKind,
+    payload: string,
+  ): Promise<void>;
+  consumeSignals(ids: string[]): Promise<void>;
+
+  subscribeRoster(channel: string, cb: (members: Member[]) => void): () => void;
+  subscribeFloor(
+    channel: string,
+    cb: (floor: FloorState | null) => void,
+  ): () => void;
+  subscribeInbox(
+    sessionId: string,
+    cb: (signals: Signal[]) => void,
+  ): () => void;
+}
+
+export { CHANNELS } from "../../channels";
