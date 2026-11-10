@@ -33,6 +33,11 @@ for (const viewport of [
     await expect(
       page.getByRole("heading", { name: "Radio settings" }),
     ).toBeVisible();
+    await page.getByText("About us", {exact: true}).click();
+    await expect(page.getByRole("heading", {name: "Satish Kumar Jaiswal"})).toBeVisible();
+    const portrait = page.getByRole("img", {name: "Satish Kumar Jaiswal, creator of Satish Talk"});
+    await expect(portrait).toBeVisible();
+    await expect.poll(() => portrait.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
     await page.getByRole("switch", { name: "Keep Screen Awake" }).check();
     await expect(
       page.getByRole("switch", { name: "Keep Screen Awake" }),
