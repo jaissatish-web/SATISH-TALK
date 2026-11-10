@@ -7,4 +7,5 @@ if(process.env.VERCEL_ENV==='production') {
   // Convex injects its actual target URL into the pre-push command. The guard
   // refuses a wrong key before secret initialization, build or backend push.
   run(process.execPath,[cli,'deploy','--cmd','node scripts/production-channel.mjs && npm run build','--cmd-url-env-var-name','VITE_CONVEX_URL']);
+  if(process.env.SATISH_RUN_PRODUCTION_CHECKS==='1')run(process.execPath,['scripts/production-smoke.mjs']);
 } else run('npm',['run','build']);
