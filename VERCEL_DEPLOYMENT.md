@@ -50,8 +50,10 @@ Keep the previous known-good frontend deployment and backend revision. Review sc
 
 ## Production integration build
 
-Production uses `node scripts/vercel-build.mjs`. It runs the pinned Convex CLI with the Vercel server-side `CONVEX_DEPLOY_KEY`, injects the actual selected backend URL, and checks it against `SATISH_EXPECTED_CONVEX_URL` before building or pushing functions. A mismatch stops the deployment. Preview/local builds run the ordinary frontend build without changing production.
+Production uses `node scripts/vercel-build.mjs`. It runs the pinned Convex CLI with the Vercel server-side `SATISH_CONVEX_DEPLOY_KEY` (passed only to the CLI as `CONVEX_DEPLOY_KEY`), injects the actual selected backend URL, and checks it against `SATISH_EXPECTED_CONVEX_URL` before building or pushing functions. A mismatch stops the deployment. Preview/local builds run the ordinary frontend build without changing production.
 
 The pre-push helper initializes only missing `ROOM_TOKEN`, `ACCESS_CODE` and `OWNER_TOKEN` values with independent 32-byte cryptographic randomness. Existing names are preserved, never rotated automatically. Values are written to a mode-0600 temporary file for the official Convex CLI, with command output captured and the file removed afterward. They are not printed, committed, bundled in the frontend or returned as artifacts. Retrieve the values privately in the signed-in Convex production Environment Variables page; never put them in a public issue or report.
 
 The production deploy key needs backend deploy plus environment-variable view/write permissions. Set `SATISH_EXPECTED_CONVEX_URL` and `VITE_CONVEX_URL` to the same verified production cloud URL. Never reuse a key or URL from another project. The separate Convex Free plan remains unchanged by this build.
+
+Use `SATISH_CONVEX_DEPLOY_KEY` for this verified production deployment. Existing Marketplace-managed `CONVEX_DEPLOY_KEY` entries are preserved; the build does not rely on them and does not require deleting an integration. Set the custom key only in Production, mark it Sensitive, and rotate it before its selected expiration.
