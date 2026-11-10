@@ -212,7 +212,7 @@ export default function App() {
             className={`status ${online ? "online" : working ? "connecting" : "offline"}`}
           >
             <i />
-            {online ? "Online" : working ? "Connecting" : "Offline"}
+            {online ? "Online" : working ? "Connecting…" : "Offline"}
           </span>
         </div>
         <div className="connection-line">
@@ -284,24 +284,26 @@ export default function App() {
             <section className="mode-panel">
               <Toggle
                 label="Walkie-Talkie Mode"
-                checked={connected}
+                checked={connected || working}
                 disabled={
-                  !connected &&
-                  (working || name.trim().length < 2 || !token || !code)
+                  !connected && !working &&
+                  (name.trim().length < 2 || !token || !code)
                 }
                 onChange={mode}
               />
               <p>
-                {connected
-                  ? "Listening on this channel. Hold the button to speak."
-                  : working
-                    ? "Establishing a secure session…"
+                {working
+                  ? "Connecting… Allow microphone access if prompted."
+                  : online
+                    ? "Listening on this channel. Hold the button to speak."
                     : "Turn on to connect your microphone and receive audio."}
               </p>
               {working && (
-                <button className="text-button" onClick={cancel}>
-                  Cancel connection
-                </button>
+                <div className="connecting-feedback" role="status">
+                  <span className="connection-spinner" aria-hidden="true" />
+                  <span>Connecting to your team…</span>
+                  <button className="text-button" onClick={cancel}>Cancel connection</button>
+                </div>
               )}
             </section>
             <section className="talk-panel">
@@ -391,13 +393,14 @@ export default function App() {
             <h2>Radio settings</h2>
             <Toggle
               label="Walkie-Talkie Mode"
-              checked={connected}
+              checked={connected || working}
               disabled={
-                !connected &&
-                (working || name.trim().length < 2 || !token || !code)
+                !connected && !working &&
+                (name.trim().length < 2 || !token || !code)
               }
               onChange={mode}
             />
+            {working && <p className="connecting-feedback" role="status"><span className="connection-spinner" aria-hidden="true" />Connecting to your team… Tap the switch again to cancel.</p>}
             <Toggle
               label="Keep Screen Awake"
               checked={awake}
