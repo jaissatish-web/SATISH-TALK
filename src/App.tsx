@@ -240,11 +240,14 @@ export default function App() {
           <>
             {!connected && (
               <section className="join-panel">
-                <h2>Join your team</h2>
+                <h2>1. Enter your details to join</h2>
+                <p className="muted">Enter your name and both team credentials below. Ask your team lead for the invitation and access code.</p>
                 <div className="fields">
                   <label>
-                    Your display name
+                    Your name (required)
                     <input
+                      required
+                      aria-describedby="name-help"
                       autoComplete="nickname"
                       maxLength={32}
                       value={name}
@@ -252,28 +255,35 @@ export default function App() {
                         setName(e.target.value);
                         saveDisplayName(e.target.value);
                       }}
-                      placeholder="e.g. Satish"
+                      placeholder="Enter your name, e.g. Satish"
                     />
+                    <small id="name-help" className="field-help">This name is shown to your team. Use at least 2 characters.</small>
                   </label>
                   <label>
-                    Private invitation token
+                    Private invitation token (required)
                     <input
                       type="password"
                       autoComplete="off"
+                      required
+                      aria-describedby="invite-help"
                       value={token}
                       onChange={(e) => setToken(e.target.value)}
-                      placeholder="Open your invite or paste token"
+                      placeholder="Open your invite or paste the invitation token"
                     />
+                    <small id="invite-help" className="field-help">Your invite link fills this in. Otherwise, paste the token from your team lead.</small>
                   </label>
                   <label>
-                    Channel access code
+                    Channel access code (required)
                     <input
                       type="password"
                       autoComplete="off"
+                      required
+                      aria-describedby="code-help"
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      placeholder="Ask your team lead"
+                      placeholder="Enter the access code from your team lead"
                     />
+                    <small id="code-help" className="field-help">Paste the channel access code here. This is separate from your invitation token.</small>
                   </label>
                 </div>
                 <Toggle label="Remember team access on this device" checked={remember}
@@ -282,6 +292,7 @@ export default function App() {
               </section>
             )}
             <section className="mode-panel">
+              <h2>{online ? "You are online" : working ? "Connecting to your team…" : "2. Turn on to go online"}</h2>
               <Toggle
                 label="Walkie-Talkie Mode"
                 checked={connected || working}
@@ -296,7 +307,9 @@ export default function App() {
                   ? "Connecting… Allow microphone access if prompted."
                   : online
                     ? "Listening on this channel. Hold the button to speak."
-                    : "Turn on to connect your microphone and receive audio."}
+                    : name.trim().length < 2 || !token || !code
+                      ? "First enter your name, invitation token and channel access code above. Then turn Walkie-Talkie Mode ON to go online."
+                      : "Your details are ready. Turn Walkie-Talkie Mode ON to go online and hear your team."}
               </p>
               {working && (
                 <div className="connecting-feedback" role="status">
@@ -391,6 +404,7 @@ export default function App() {
         {tab === "Settings" && (
           <section className="settings-panel">
             <h2>Radio settings</h2>
+            <p className="muted">Turn Walkie-Talkie Mode ON to go online and hear your team. Turn it OFF to disconnect.</p>
             <Toggle
               label="Walkie-Talkie Mode"
               checked={connected || working}
