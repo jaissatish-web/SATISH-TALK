@@ -591,3 +591,12 @@ details p {
 
 .field-help { display: block; color: #a7b8cc; font-size: 0.82rem; font-weight: 400; line-height: 1.45; margin-top: 0.35rem; }
 .mode-panel h2 { margin: 0 0 0.8rem; font-size: 1.1rem; }
+
+label.remember-access { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); min-height: 44px; margin-top: 6px; font-weight: 400; cursor: pointer; }
+.remember-access input { width: 16px; height: 16px; margin: 0; accent-color: #327cea; }
+.join-action { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 18px 0; }
+.go-online { min-height: 48px; min-width: 170px; border-radius: 24px; background: #327cea; color: white; font-weight: 600; border: 0; }
+.go-online.pending, .go-online.success { min-width: 52px; width: 52px; height: 52px; padding: 0; border-radius: 50%; display: grid; place-items: center; }
+.go-online.pending .connection-spinner { width: 24px; height: 24px; border-color: #ffffff60; border-top-color: white; }
+.go-online.success:disabled { background: #16a36b; color: white; opacity: 1; font-size: 26px; }
+.joining-label { color: #93c5fd; font-size: 13px; }

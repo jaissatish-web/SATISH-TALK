@@ -17,7 +17,7 @@ for (const viewport of [
     await expect(
       page.getByRole("button", { name: "Hold to talk" }),
     ).toBeDisabled();
-    await expect(page.getByLabel("Private invitation token")).toHaveValue(
+    await expect(page.getByLabel("Invitation code")).toHaveValue(
       "test-invitation-not-a-real-secret",
     );
     expect(new URL(page.url()).hash).toBe("");
@@ -57,14 +57,14 @@ test("remembered access restores after reload and leave erases it", async ({ pag
   await page.goto("/");
   await page.evaluate(() => localStorage.setItem("satish-talk:remembered-access", JSON.stringify({token: "a".repeat(43),code: "test-private-code"})));
   await page.reload();
-  await expect(page.getByLabel("Private invitation token")).toHaveValue("a".repeat(43));
-  await expect(page.getByLabel("Channel access code")).toHaveValue("test-private-code");
-  await expect(page.getByRole("switch", {name: "Walkie-Talkie Mode"})).not.toBeChecked();
+  await expect(page.getByLabel("Invitation code")).toHaveValue("a".repeat(43));
+  await expect(page.getByLabel("2. Channel access code", { exact: true })).toHaveValue("test-private-code");
+  await expect(page.getByRole("button", {name: "Go online"})).toBeVisible();
   await page.getByRole("navigation").getByRole("button", {name: "Settings"}).click();
   await page.getByRole("button", {name: "Leave channel"}).click();
   await page.reload();
-  await expect(page.getByLabel("Private invitation token")).toHaveValue("");
-  await expect(page.getByLabel("Channel access code")).toHaveValue("");
+  await expect(page.getByLabel("Invitation code")).toHaveValue("");
+  await expect(page.getByLabel("2. Channel access code", { exact: true })).toHaveValue("");
 });
 
 test("mode responds immediately while joining and can cancel", async ({ page }) => {
@@ -73,21 +73,17 @@ test("mode responds immediately while joining and can cancel", async ({ page }) 
     await route.abort();
   });
   await page.goto("/");
-  await expect(page.getByRole("heading", {name: "1. Enter your details to join"})).toBeVisible();
-  await expect(page.getByRole("heading", {name: "2. Turn on to go online"})).toBeVisible();
-  await expect(page.getByRole("switch", {name: "Walkie-Talkie Mode"})).toBeDisabled();
-  await page.getByLabel("Your name").fill("Test member");
-  await page.getByLabel("Private invitation token").fill("a".repeat(43));
-  await page.getByLabel("Channel access code").fill("test-private-code");
-  const mode = page.getByRole("switch", {name: "Walkie-Talkie Mode"});
-  await mode.check();
-  await expect(mode).toBeChecked();
-  await expect(mode).toBeEnabled();
-  await expect(page.getByText("Connecting to your team…", {exact: true}).first()).toBeVisible();
+  await expect(page.getByRole("button", {name: "Go online"})).toBeDisabled();
+  await page.getByLabel("Name").fill("Test member");
+  await page.getByLabel("Invitation code").fill("a".repeat(43));
+  await page.getByLabel("2. Channel access code", { exact: true }).fill("test-private-code");
+  await page.getByRole("button", {name: "Go online"}).click();
+  await expect(page.getByRole("button", {name: "Cancel connection"})).toBeVisible();
+  await expect(page.getByText("Connecting…", {exact: true}).last()).toBeVisible();
   await expect(page.getByRole("button", {name: "Hold to talk"})).toBeDisabled();
-  await mode.uncheck();
-  await expect(mode).not.toBeChecked();
+  await page.getByRole("button", {name: "Cancel connection"}).click();
+  await expect(page.getByRole("button", {name: "Go online"})).toBeVisible();
   await expect(page.getByText("Radio is offline", {exact:true})).toBeVisible();
   await page.waitForTimeout(1800);
-  await expect(mode).not.toBeChecked();
+  await expect(page.getByRole("button", {name: "Go online"})).toBeVisible();
 });
