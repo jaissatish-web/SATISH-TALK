@@ -526,6 +526,18 @@ export default function App() {
                 environment to revoke access. Never share the owner key.
               </p>
             </details>
+            <details className="about-us">
+              <summary>About us</summary>
+              <div className="founder-profile">
+                <img src="/images/satish-jaiswal.webp" alt="Satish Kumar Jaiswal, creator of Satish Talk" width={160} height={160} loading="lazy" />
+                <div>
+                  <span className="eyebrow">Built by</span>
+                  <h3>Satish Kumar Jaiswal</h3>
+                  <p>Instrumentation &amp; Control professional with over 15 years of experience in industrial projects.</p>
+                </div>
+              </div>
+              <p>I built Satish Talk to make everyday communication simpler for field teams and control rooms.</p>
+            </details>
             <details>
               <summary>Install on your phone</summary>
               <p>
