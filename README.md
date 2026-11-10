@@ -28,7 +28,7 @@ Install using Chrome's install/Add to Home screen menu, or Safari's Share → Ad
 
 ## Project status
 
-Source is prepared for a separate deployment task. No Vercel or Convex deployment is part of this implementation. See [TEST_REPORT.md](TEST_REPORT.md) for verified results and outstanding physical-device checks. Ten-user support is an architectural target, not a claim of certified network performance.
+Production is live at https://satishtalk.vercel.app/ and connected to the separate Satish Talk Convex backend. Production setup and live coordination checks completed on 10 November 2026. See [TEST_REPORT.md](TEST_REPORT.md) for verified results and outstanding physical-device checks. Ten-user support is an architectural target, not a claim of certified network performance.
 
 ## Setup and ownership
 
