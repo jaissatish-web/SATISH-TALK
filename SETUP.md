@@ -1,6 +1,6 @@
 # Setup for the owner
 
-No deployment has been performed. These instructions are for a separately authorized setup task. Use a new Satish Talk project; do not select an existing Team Radio or GCC Mentor backend.
+Production setup completed on 10 November 2026. The existing project is `satish-jaiswal:satish-talk:production` (`descriptive-akita-759`, Sydney), serving https://satishtalk.vercel.app/. Do not create a duplicate or select Team Radio/GCC Mentor resources. The following instructions explain maintenance or an independently authorized new environment.
 
 ## Local tools
 
@@ -55,3 +55,9 @@ For a future production deployment, use `npx convex deploy` only after checking 
 ## Repeatable browser checks
 
 Run `npx playwright install chromium`, then `npm run e2e`. The suite includes responsive UI and synthetic 2/5/10-peer WebRTC checks. It uses a test-only local signaling harness rather than a live Convex backend. A constrained sandbox without usable ICE network interfaces may fail the mesh checks; this does not establish either real-device success or a product defect. Run on a normal developer machine/CI and then complete TEST_REPORT.md on phones.
+
+## Retrieve your private team credentials
+
+Open the signed-in Convex dashboard for SATISH TALK → Production → Settings → Environment Variables. Copy `ROOM_TOKEN` into the private invitation field and `ACCESS_CODE` into the channel access-code field. Keep `OWNER_TOKEN` only with the owner for channel-name changes. Use the app’s Invite Member button after joining; share the access code separately. Values are deliberately absent from GitHub, this guide and the setup report.
+
+The Vercel production deploy key is stored as the sensitive variable `SATISH_CONVEX_DEPLOY_KEY` and expires 90 days after creation. Replace it securely before expiration. The previously exposed unused setup key was revoked. No command-line account login remains active in the setup workspace.
