@@ -42,3 +42,8 @@ Production is live at https://satishtalk.vercel.app/ and connected to the separa
 ## Attribution
 
 Based on [Team Radio by Tony Blount](https://github.com/mrtblount/radio1). Its MIT notice is preserved in [LICENSE](LICENSE). Satish Talk is independent of GCC Mentor.
+
+### Remember access on your phone
+Enable **Remember team access on this device** before joining on your personal phone. After joining, the invitation token and access code are saved in this browser's local storage; they are restored after closing Chrome or the installed PWA. Tap Walkie-Talkie Mode to reconnect. A different browser or app storage context may require joining once again.
+
+Disable the setting to erase saved credentials, or choose **Leave channel** to disconnect and erase them. Do not enable it on a shared device. The owner key is never saved. Installing the app does not guarantee audio while Android suspends it.
