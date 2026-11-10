@@ -391,7 +391,20 @@ export default function App() {
         )}
         {tab === "Settings" && (
           <section className="settings-panel">
-            <h2>Radio settings</h2>
+            <h2>Settings</h2>
+            <section className="about-us" aria-labelledby="about-heading">
+              <h3 id="about-heading">About us</h3>
+              <div className="founder-profile">
+                <img src="/images/satish-jaiswal.webp" alt="Satish Kumar Jaiswal, creator of Satish Talk" width={160} height={160} loading="lazy" />
+                <div>
+                  <span className="eyebrow">Built by</span>
+                  <h3>Satish Kumar Jaiswal</h3>
+                  <p>Instrumentation &amp; Control professional with over 15 years of experience in industrial projects.</p>
+                </div>
+              </div>
+              <p>I built Satish Talk to make everyday communication simpler for field teams and control rooms.</p>
+            </section>
+            <h3>Radio settings</h3>
             <p className="muted">Turn Walkie-Talkie Mode ON to go online and hear your team. Turn it OFF to disconnect.</p>
             <Toggle
               label="Walkie-Talkie Mode"
@@ -526,18 +539,7 @@ export default function App() {
                 environment to revoke access. Never share the owner key.
               </p>
             </details>
-            <details className="about-us">
-              <summary>About us</summary>
-              <div className="founder-profile">
-                <img src="/images/satish-jaiswal.webp" alt="Satish Kumar Jaiswal, creator of Satish Talk" width={160} height={160} loading="lazy" />
-                <div>
-                  <span className="eyebrow">Built by</span>
-                  <h3>Satish Kumar Jaiswal</h3>
-                  <p>Instrumentation &amp; Control professional with over 15 years of experience in industrial projects.</p>
-                </div>
-              </div>
-              <p>I built Satish Talk to make everyday communication simpler for field teams and control rooms.</p>
-            </details>
+
             <details>
               <summary>Install on your phone</summary>
               <p>
