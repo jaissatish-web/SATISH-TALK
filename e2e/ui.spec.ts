@@ -73,7 +73,10 @@ test("mode responds immediately while joining and can cancel", async ({ page }) 
     await route.abort();
   });
   await page.goto("/");
-  await page.getByLabel("Your display name").fill("Test member");
+  await expect(page.getByRole("heading", {name: "1. Enter your details to join"})).toBeVisible();
+  await expect(page.getByRole("heading", {name: "2. Turn on to go online"})).toBeVisible();
+  await expect(page.getByRole("switch", {name: "Walkie-Talkie Mode"})).toBeDisabled();
+  await page.getByLabel("Your name").fill("Test member");
   await page.getByLabel("Private invitation token").fill("a".repeat(43));
   await page.getByLabel("Channel access code").fill("test-private-code");
   const mode = page.getByRole("switch", {name: "Walkie-Talkie Mode"});
