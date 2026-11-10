@@ -69,6 +69,13 @@ export default function App() {
   const [owner, setOwner] = useState("");
   const [newName, setNewName] = useState("");
   const online = state.connection === "online";
+  const [connectionSuccess, setConnectionSuccess] = useState(false);
+  useEffect(() => {
+    if (!online) { setConnectionSuccess(false); return; }
+    setConnectionSuccess(true);
+    const timer = window.setTimeout(() => setConnectionSuccess(false), 900);
+    return () => window.clearTimeout(timer);
+  }, [online]);
   const audioWarning = Object.values(state.peerStates).includes("failed")
     ? "Some team audio links failed. Open Settings and tap Reconnect."
     : "";
@@ -240,14 +247,11 @@ export default function App() {
           <>
             {!connected && (
               <section className="join-panel">
-                <h2>1. Enter your details to join</h2>
-                <p className="muted">Enter your name and both team credentials below. Ask your team lead for the invitation and access code.</p>
                 <div className="fields">
                   <label>
-                    Your name (required)
+                    1. Name
                     <input
                       required
-                      aria-describedby="name-help"
                       autoComplete="nickname"
                       maxLength={32}
                       value={name}
@@ -255,70 +259,54 @@ export default function App() {
                         setName(e.target.value);
                         saveDisplayName(e.target.value);
                       }}
-                      placeholder="Enter your name, e.g. Satish"
+                      placeholder="Your name"
                     />
-                    <small id="name-help" className="field-help">This name is shown to your team. Use at least 2 characters.</small>
                   </label>
                   <label>
-                    Private invitation token (required)
+                    2. Channel access code
                     <input
                       type="password"
                       autoComplete="off"
                       required
-                      aria-describedby="invite-help"
-                      value={token}
-                      onChange={(e) => setToken(e.target.value)}
-                      placeholder="Open your invite or paste the invitation token"
-                    />
-                    <small id="invite-help" className="field-help">Your invite link fills this in. Otherwise, paste the token from your team lead.</small>
-                  </label>
-                  <label>
-                    Channel access code (required)
-                    <input
-                      type="password"
-                      autoComplete="off"
-                      required
-                      aria-describedby="code-help"
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      placeholder="Enter the access code from your team lead"
+                      placeholder="Paste channel access code"
                     />
-                    <small id="code-help" className="field-help">Paste the channel access code here. This is separate from your invitation token.</small>
+                  </label>
+                  <label>
+                    3. Invitation code
+                    <input
+                      type="password"
+                      autoComplete="off"
+                      required
+                      value={token}
+                      onChange={(e) => setToken(e.target.value)}
+                      placeholder="Paste invitation code"
+                    />
                   </label>
                 </div>
-                <Toggle label="Remember team access on this device" checked={remember}
-                  onChange={(on) => { setRemember(on); if (!on) forgetTeamAccess(); }} />
-                <p className="muted">Use only on your personal phone. Saves your invitation and access code in this browser. Turn the radio on when you return.</p>
+                <label className="remember-access">
+                  <input type="checkbox" checked={remember} onChange={(e) => {
+                    setRemember(e.target.checked);
+                    if (!e.target.checked) forgetTeamAccess();
+                  }} />
+                  Remember channel access code
+                </label>
               </section>
             )}
-            <section className="mode-panel">
-              <h2>{online ? "You are online" : working ? "Connecting to your team…" : "2. Turn on to go online"}</h2>
-              <Toggle
-                label="Walkie-Talkie Mode"
-                checked={connected || working}
-                disabled={
-                  !connected && !working &&
-                  (name.trim().length < 2 || !token || !code)
-                }
-                onChange={mode}
-              />
-              <p>
-                {working
-                  ? "Connecting… Allow microphone access if prompted."
-                  : online
-                    ? "Listening on this channel. Hold the button to speak."
-                    : name.trim().length < 2 || !token || !code
-                      ? "First enter your name, invitation token and channel access code above. Then turn Walkie-Talkie Mode ON to go online."
-                      : "Your details are ready. Turn Walkie-Talkie Mode ON to go online and hear your team."}
-              </p>
-              {working && (
-                <div className="connecting-feedback" role="status">
-                  <span className="connection-spinner" aria-hidden="true" />
-                  <span>Connecting to your team…</span>
-                  <button className="text-button" onClick={cancel}>Cancel connection</button>
-                </div>
-              )}
-            </section>
+            {(!online || connectionSuccess) && (
+              <div className="join-action">
+                <button
+                  className={`go-online ${online ? "success" : working ? "pending" : ""}`}
+                  disabled={online || (!working && (name.trim().length < 2 || !token || !code))}
+                  aria-label={online ? "Connected" : working ? "Cancel connection" : "Go online"}
+                  onClick={() => working ? cancel() : connected ? void radio.reconnect() : mode(true)}
+                >
+                  {online ? <span aria-hidden="true">✓</span> : working ? <span className="connection-spinner" aria-hidden="true" /> : "Go online"}
+                </button>
+                {working && <span className="joining-label" role="status">Connecting…</span>}
+              </div>
+            )}
             <section className="talk-panel">
               <p className="speaker" role="status" aria-live="polite">
                 <i className={state.talking ? "lit" : ""} />
