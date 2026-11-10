@@ -47,3 +47,11 @@ Official references:
 ## Rollback
 
 Keep the previous known-good frontend deployment and backend revision. Review schema compatibility before backend rollback. Never roll a frontend back to the original public-access or recording-enabled upstream configuration. Rotate exposed secrets rather than relying on deletion from Git history.
+
+## Production integration build
+
+Production uses `node scripts/vercel-build.mjs`. It runs the pinned Convex CLI with the Vercel server-side `CONVEX_DEPLOY_KEY`, injects the actual selected backend URL, and checks it against `SATISH_EXPECTED_CONVEX_URL` before building or pushing functions. A mismatch stops the deployment. Preview/local builds run the ordinary frontend build without changing production.
+
+The pre-push helper initializes only missing `ROOM_TOKEN`, `ACCESS_CODE` and `OWNER_TOKEN` values with independent 32-byte cryptographic randomness. Existing names are preserved, never rotated automatically. Values are written to a mode-0600 temporary file for the official Convex CLI, with command output captured and the file removed afterward. They are not printed, committed, bundled in the frontend or returned as artifacts. Retrieve the values privately in the signed-in Convex production Environment Variables page; never put them in a public issue or report.
+
+The production deploy key needs backend deploy plus environment-variable view/write permissions. Set `SATISH_EXPECTED_CONVEX_URL` and `VITE_CONVEX_URL` to the same verified production cloud URL. Never reuse a key or URL from another project. The separate Convex Free plan remains unchanged by this build.

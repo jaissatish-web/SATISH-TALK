@@ -1,0 +1,8 @@
+import {describe,it,expect,vi} from 'vitest';
+// @ts-expect-error The deployment helper is plain Node ESM.
+import {prepareChannel} from '../scripts/production-channel.mjs';
+describe('production secret initialization',()=>{
+ it('refuses the wrong deployment before reading or changing secrets',()=>{const listNames=vi.fn(),saveMissing=vi.fn();expect(()=>prepareChannel({actualUrl:'https://wrong.convex.cloud',expectedUrl:'https://right.convex.cloud',listNames,saveMissing})).toThrow('mismatch');expect(listNames).not.toHaveBeenCalled();expect(saveMissing).not.toHaveBeenCalled();});
+ it('generates independent strong secrets without logging their values',()=>{let saved:Record<string,string>={};const log=vi.fn();prepareChannel({actualUrl:'https://right.convex.cloud',expectedUrl:'https://right.convex.cloud',listNames:()=>'',saveMissing:(v:Record<string,string>)=>{saved=v;},log});expect(Object.keys(saved)).toEqual(['ROOM_TOKEN','ACCESS_CODE','OWNER_TOKEN']);expect(new Set(Object.values(saved)).size).toBe(3);for(const secret of Object.values(saved)){expect(secret).toMatch(/^[A-Za-z0-9_-]{43}$/);expect(JSON.stringify(log.mock.calls)).not.toContain(secret);}});
+ it('preserves existing credentials and initializes only missing names',()=>{const saveMissing=vi.fn();const common={actualUrl:'https://right.convex.cloud',expectedUrl:'https://right.convex.cloud',saveMissing,log:()=>{}};prepareChannel({...common,listNames:()=> 'ROOM_TOKEN\nACCESS_CODE\nOWNER_TOKEN\n'});expect(saveMissing).not.toHaveBeenCalled();prepareChannel({...common,listNames:()=> 'ROOM_TOKEN\nACCESS_CODE\n'});expect(Object.keys(saveMissing.mock.calls[0][0])).toEqual(['OWNER_TOKEN']);});
+});
