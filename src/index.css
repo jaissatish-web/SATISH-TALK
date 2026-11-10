@@ -566,3 +566,25 @@ details p {
 .speaker {
   overflow-wrap: anywhere;
 }
+
+.connecting-feedback {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  color: #93c5fd;
+}
+.connection-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  border: 2px solid #334b68;
+  border-top-color: #93c5fd;
+  border-radius: 50%;
+  animation: connection-spin 1s linear infinite;
+}
+@keyframes connection-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .connection-spinner { animation: none; }
+}

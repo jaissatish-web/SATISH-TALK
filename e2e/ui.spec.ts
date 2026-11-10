@@ -66,3 +66,25 @@ test("remembered access restores after reload and leave erases it", async ({ pag
   await expect(page.getByLabel("Private invitation token")).toHaveValue("");
   await expect(page.getByLabel("Channel access code")).toHaveValue("");
 });
+
+test("mode responds immediately while joining and can cancel", async ({ page }) => {
+  await page.route("**/*.convex.cloud/**", async route => {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    await route.abort();
+  });
+  await page.goto("/");
+  await page.getByLabel("Your display name").fill("Test member");
+  await page.getByLabel("Private invitation token").fill("a".repeat(43));
+  await page.getByLabel("Channel access code").fill("test-private-code");
+  const mode = page.getByRole("switch", {name: "Walkie-Talkie Mode"});
+  await mode.check();
+  await expect(mode).toBeChecked();
+  await expect(mode).toBeEnabled();
+  await expect(page.getByText("Connecting to your team…", {exact: true}).first()).toBeVisible();
+  await expect(page.getByRole("button", {name: "Hold to talk"})).toBeDisabled();
+  await mode.uncheck();
+  await expect(mode).not.toBeChecked();
+  await expect(page.getByText("Radio is offline", {exact:true})).toBeVisible();
+  await page.waitForTimeout(1800);
+  await expect(mode).not.toBeChecked();
+});
