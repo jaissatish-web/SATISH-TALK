@@ -1,5 +1,4 @@
 const NAME_KEY = "satish-talk:name";
-const CODE_KEY = "satish-talk:code";
 const KEEP_AWAKE_KEY = "satish-talk:keepAwake";
 
 /**
@@ -27,21 +26,23 @@ export function saveDisplayName(name: string): void {
   }
 }
 
-/** Access code is remembered per device so the team enters it once. */
-export function loadAccessCode(): string {
+const ACCESS_KEY = "satish-talk:remembered-access";
+export function loadTeamAccess(): { token: string; code: string } | null {
   try {
-    return sessionStorage.getItem(CODE_KEY) ?? "";
-  } catch {
-    return "";
-  }
+    const value = JSON.parse(localStorage.getItem(ACCESS_KEY) || "null");
+    return value && typeof value.token === "string" && typeof value.code === "string"
+      && /^[A-Za-z0-9_-]{32,256}$/.test(value.token) && value.code.length >= 8
+      ? { token: value.token, code: value.code } : null;
+  } catch { return null; }
 }
-
-export function saveAccessCode(code: string): void {
+export function saveTeamAccess(token: string, code: string): boolean {
   try {
-    sessionStorage.setItem(CODE_KEY, code);
-  } catch {
-    // private browsing — they'll re-enter next time
-  }
+    localStorage.setItem(ACCESS_KEY, JSON.stringify({ token, code }));
+    return true;
+  } catch { return false; }
+}
+export function forgetTeamAccess(): void {
+  try { localStorage.removeItem(ACCESS_KEY); } catch { /* storage unavailable */ }
 }
 
 /** Screen awake is opt-in; persist only the preference. */

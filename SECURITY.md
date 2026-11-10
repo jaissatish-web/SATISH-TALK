@@ -35,3 +35,6 @@ Keep the owner token in a password manager. Changing either `ROOM_TOKEN` or `ACC
 Authorized members can hear and externally record what they receive. A modified client may ignore half-duplex discipline. Browser/device compromise, leaked bearer credentials, weak passphrases and site network restrictions remain risks. HTTPS and backend authorization do not make ordinary phones intrinsically safe for hazardous areas.
 
 Dependencies must be reviewed using the lockfile and `npm audit` before deployment. See TEST_REPORT.md for actual audit outcomes, not an assumed clean bill of health.
+
+## Optional device access storage
+The opt-in Remember team access setting stores the room invitation and access code in localStorage after joining. Anyone with access to that browser profile, or JavaScript running on this origin, can retrieve them. Use only a trusted personal device. Turning the setting off or choosing Leave channel removes the saved entry. Owner keys and session identities are never persisted by this feature. Backend credential rotation still rejects old saved credentials.

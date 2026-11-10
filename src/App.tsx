@@ -5,6 +5,9 @@ import { getBackend } from "./lib/radio/convexBackend";
 import { api } from "../convex/_generated/api";
 import {
   loadKeepAwake,
+  loadTeamAccess,
+  saveTeamAccess,
+  forgetTeamAccess,
   loadDisplayName,
   saveDisplayName,
 } from "./lib/radio/session";
@@ -45,12 +48,17 @@ export default function App() {
   const radio = useRadio();
   const { state } = radio;
   const [name, setName] = useState(loadDisplayName);
-  const [token, setToken] = useState(readInvite);
+  const [savedAccess] = useState(loadTeamAccess);
+  const [initialInvite] = useState(readInvite);
+  const [remember, setRemember] = useState(Boolean(savedAccess));
+  const [token, setToken] = useState(initialInvite || savedAccess?.token || "");
   useEffect(() => {
     if (location.hash)
       history.replaceState(null, "", location.pathname + location.search);
   }, []);
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(
+    initialInvite && initialInvite !== savedAccess?.token ? "" : savedAccess?.code || "",
+  );
   const [tab, setTab] = useState("Radio");
   const [channelName, setChannelName] = useState("Instrumentation Team");
   const [awake, setAwake] = useState(loadKeepAwake);
@@ -68,6 +76,10 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [tab]);
   const connected = state.screen === "channel";
+  useEffect(() => {
+    if (connected && remember && !saveTeamAccess(token, code))
+      setNotice("This browser cannot save team access. You will need to enter it again next time.");
+  }, [connected, remember, token, code]);
   const [preparing, setPreparing] = useState(false);
   const connectEpoch = useRef(0);
   const working =
@@ -264,6 +276,9 @@ export default function App() {
                     />
                   </label>
                 </div>
+                <Toggle label="Remember team access on this device" checked={remember}
+                  onChange={(on) => { setRemember(on); if (!on) forgetTeamAccess(); }} />
+                <p className="muted">Use only on your personal phone. Saves your invitation and access code in this browser. Turn the radio on when you return.</p>
               </section>
             )}
             <section className="mode-panel">
@@ -463,6 +478,8 @@ export default function App() {
                 className="danger"
                 onClick={() => {
                   cancel();
+                  forgetTeamAccess();
+                  setRemember(false);
                   setToken("");
                   setCode("");
                   setTab("Radio");
@@ -471,6 +488,9 @@ export default function App() {
                 Leave channel
               </button>
             </div>
+            <Toggle label="Remember team access on this device" checked={remember}
+              onChange={(on) => { setRemember(on); if (!on) forgetTeamAccess(); }} />
+            <p className="muted">Saved on this device only. Leave channel clears saved access. The owner key is never saved.</p>
             <details>
               <summary>Channel owner controls</summary>
               <label>

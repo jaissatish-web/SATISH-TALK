@@ -52,3 +52,17 @@ for (const viewport of [
     ).toBe(true);
   });
 }
+
+test("remembered access restores after reload and leave erases it", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => localStorage.setItem("satish-talk:remembered-access", JSON.stringify({token: "a".repeat(43),code: "test-private-code"})));
+  await page.reload();
+  await expect(page.getByLabel("Private invitation token")).toHaveValue("a".repeat(43));
+  await expect(page.getByLabel("Channel access code")).toHaveValue("test-private-code");
+  await expect(page.getByRole("switch", {name: "Walkie-Talkie Mode"})).not.toBeChecked();
+  await page.getByRole("navigation").getByRole("button", {name: "Settings"}).click();
+  await page.getByRole("button", {name: "Leave channel"}).click();
+  await page.reload();
+  await expect(page.getByLabel("Private invitation token")).toHaveValue("");
+  await expect(page.getByLabel("Channel access code")).toHaveValue("");
+});
